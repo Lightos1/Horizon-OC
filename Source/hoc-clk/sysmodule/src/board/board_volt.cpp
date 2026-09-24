@@ -87,6 +87,26 @@ namespace board {
         }
     }
 
+    void GetClDvfsMonitorData(ClDvfsMonitorData &outData) {
+        u32 regValue = *reinterpret_cast<u32 *>(cldvfs + CL_DVFS_MONITOR_DATA_0);
+
+        constexpr u32 DataNewMask    = 0x1u << 16;
+        outData.dfllMonitorDataNew   = (regValue & DataNewMask) >> 16;
+        outData.dfllMonitorDataValue = regValue  & 0xFFFF;
+    }
+
+    void WriteCldvfsMonitorCtrl(DlDvfsMonitorCtrl ctrl) {
+        *reinterpret_cast<u32 *>(cldvfs + CL_DVFS_MONITOR_CTRL_0) = ctrl;
+    }
+
+    u32 ReadCldvfsParams() {
+        return *reinterpret_cast<u32 *>(cldvfs + CL_DVFS_PARAMS_0);
+    }
+
+    void WriteCldvfsParams(u32 params) {
+        *reinterpret_cast<u32 *>(cldvfs + CL_DVFS_PARAMS_0) = params;
+    }
+
     /* TODO: clean up this code. */
     void SetDfllTunings(u32 levelLow, u32 levelHigh, u32 tbreakPoint) {
         u32 *tune0_ptr = reinterpret_cast<u32 *>(cldvfs + CL_DVFS_TUNE0_0);

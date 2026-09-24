@@ -125,9 +125,15 @@ struct CustomizeTable {
 
     s32 commonGpuVoltOffset;
 
+    u32 marikoCpuVoltArray[26];
     u32 eristaGpuVoltArray[27];
     u32 marikoGpuVoltArray[25];
     s32 marikoSocVoltArray[28];
+
+    u32 tune0_low;
+    u32 tune1_low;
+    u32 tune0_high;
+    u32 tune1_high;
 
     u32 fineTune_t6_tRTW;
     u32 fineTune_t7_tWTR;

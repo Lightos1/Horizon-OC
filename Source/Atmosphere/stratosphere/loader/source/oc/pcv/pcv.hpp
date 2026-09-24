@@ -46,6 +46,14 @@ namespace ams::ldr::hoc::pcv {
         return true;
     };
 
+    constexpr void ClearCvbDfllEntry(cvb_entry_t *entry) {
+        PATCH_OFFSET(&(entry->cvb_dfll_param.c1), 0);
+        PATCH_OFFSET(&(entry->cvb_dfll_param.c2), 0);
+        PATCH_OFFSET(&(entry->cvb_dfll_param.c3), 0);
+        PATCH_OFFSET(&(entry->cvb_dfll_param.c4), 0);
+        PATCH_OFFSET(&(entry->cvb_dfll_param.c5), 0);
+    }
+
     template <bool isMariko>
     Result CpuFreqCvbTable(u32 *ptr) {
         cvb_entry_t *default_table = isMariko ? (cvb_entry_t *)(&mariko::CpuCvbTableDefault) : (cvb_entry_t *)(&erista::CpuCvbTableDefault);
@@ -107,6 +115,12 @@ namespace ams::ldr::hoc::pcv {
                     } else {
                         // PATCH_OFFSET(&(entry->cvb_dfll_param.c0), cpu_max_volt * 1000);
                     }
+                }
+
+                /* Again this won't work for custom table. Just research. */
+                if (C.marikoCpuVoltArray[i] != 0) {
+                    ClearCvbDfllEntry(entry);
+                    PATCH_OFFSET(&(entry->cvb_dfll_param.c0), C.marikoCpuVoltArray[i] * 1000);
                 }
                 entry++;
             }

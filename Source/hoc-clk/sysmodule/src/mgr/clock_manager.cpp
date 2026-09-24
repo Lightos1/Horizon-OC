@@ -373,6 +373,27 @@ namespace mgr {
             if (file::config::GetConfigValue(HocClkConfigValue_LiveCpuUv)) {
                 board::HandleCpuUv();
             }
+
+            {
+                auto ctrl = static_cast<DlDvfsMonitorCtrl>(file::config::GetConfigValue(HocClkConfigValue_ClDvfsMonitorCtrl));
+                if (ctrl) {
+                    board::WriteCldvfsMonitorCtrl(ctrl == Ctrl_Disable ? static_cast<DlDvfsMonitorCtrl>(0) : ctrl);
+                }
+
+                static bool paramsOverridden = false;
+                static u32 originalParams = 0;
+                if (file::config::GetConfigValue(HocClkConfigValue_ClDvfsParamsOverride)) {
+                    if (!paramsOverridden) {
+                        originalParams = board::ReadCldvfsParams();
+                        paramsOverridden = true;
+                    }
+                    u32 params = file::config::GetConfigValue(HocClkConfigValue_ClDvfsParams);
+                    board::WriteCldvfsParams(params ? params : CLDVFS_PARAMS_RESET_VALUE);
+                } else if (paramsOverridden) {
+                    board::WriteCldvfsParams(originalParams);
+                    paramsOverridden = false;
+                }
+            }
         }
     }
 
@@ -776,6 +797,8 @@ namespace mgr {
             gContext.resolutionHeight = hos::GetSaltyNXResolutionHeight();
         else
             gContext.resolutionHeight = 0;  // N/A
+
+        board::GetClDvfsMonitorData(gContext.cldvfsMonitorData);
 
         return hasChanged;
     }

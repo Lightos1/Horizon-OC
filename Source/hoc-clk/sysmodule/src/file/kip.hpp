@@ -93,9 +93,15 @@ namespace file::kip {
 
         u32 commonGpuVoltOffset;
 
+        u32 marikoCpuVoltArray[26];
         u32 eristaGpuVoltArray[27];
         u32 marikoGpuVoltArray[25];
         s32 marikoSocVoltArray[28];
+
+        u32 tune0_low;
+        u32 tune1_low;
+        u32 tune0_high;
+        u32 tune1_high;
 
         u32 t6_tRTW_fine_tune;
         u32 t7_tWTR_fine_tune;

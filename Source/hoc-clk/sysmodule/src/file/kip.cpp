@@ -131,6 +131,10 @@ namespace file::kip {
 
         CUST_WRITE_FIELD_BATCH(&table, commonGpuVoltOffset, file::config::GetConfigValue(KipConfigValue_commonGpuVoltOffset));
 
+        for (int i = 0; i < 26; i++) {
+            table.marikoCpuVoltArray[i] = file::config::GetConfigValue((HocClkConfigValue)(KipConfigValue_c_volt_204000 + i));
+        }
+
         for (int i = 0; i < 25; i++) {
             table.marikoGpuVoltArray[i] = file::config::GetConfigValue((HocClkConfigValue)(KipConfigValue_g_volt_76800 + i));
         }
@@ -142,6 +146,11 @@ namespace file::kip {
         for (size_t i = 0; i < 28; ++i) {
             table.marikoSocVoltArray[i] = file::config::GetConfigValue((HocClkConfigValue) (KipConfigValue_g_soc_volt_1866000 + i));
         }
+
+        CUST_WRITE_FIELD_BATCH(&table, tune0_low, file::config::GetConfigValue(KipConfigValue_tune0_low));
+        CUST_WRITE_FIELD_BATCH(&table, tune1_low, file::config::GetConfigValue(KipConfigValue_tune1_low));
+        CUST_WRITE_FIELD_BATCH(&table, tune0_high, file::config::GetConfigValue(KipConfigValue_tune0_high));
+        CUST_WRITE_FIELD_BATCH(&table, tune1_high, file::config::GetConfigValue(KipConfigValue_tune1_high));
 
         CUST_WRITE_FIELD_BATCH(&table, t6_tRTW_fine_tune, file::config::GetConfigValue(KipConfigValue_t6_tRTW_fine_tune));
         CUST_WRITE_FIELD_BATCH(&table, t7_tWTR_fine_tune, file::config::GetConfigValue(KipConfigValue_t7_tWTR_fine_tune));
@@ -327,6 +336,10 @@ namespace file::kip {
         configValues.values[KipConfigValue_marikoGpuVmax] = cust_get_mariko_gpu_vmax(&table);
         configValues.values[KipConfigValue_commonGpuVoltOffset] = cust_get_common_gpu_offset(&table);
 
+        for (int i = 0; i < 26; i++) {
+            configValues.values[KipConfigValue_c_volt_204000 + i] = table.marikoCpuVoltArray[i];
+        }
+
         for (int i = 0; i < 25; i++) {
             configValues.values[KipConfigValue_g_volt_76800 + i] = cust_get_mariko_gpu_volt(&table, i);
         }
@@ -338,6 +351,11 @@ namespace file::kip {
         for (size_t i = 0; i < 26; ++i) {
             configValues.values[KipConfigValue_g_soc_volt_1866000 + i] = cust_get_mariko_soc_volt(&table, i);
         }
+
+        configValues.values[KipConfigValue_tune0_low] = table.tune0_low;
+        configValues.values[KipConfigValue_tune1_low] = table.tune1_low;
+        configValues.values[KipConfigValue_tune0_high] = table.tune0_high;
+        configValues.values[KipConfigValue_tune1_high] = table.tune1_high;
 
         configValues.values[KipConfigValue_t7_tWTR_fine_tune] = cust_get_tWTR_fine_tune(&table);
         configValues.values[KipConfigValue_t6_tRTW_fine_tune] = cust_get_tRTW_fine_tune(&table);

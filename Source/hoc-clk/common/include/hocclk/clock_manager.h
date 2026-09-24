@@ -84,8 +84,10 @@ typedef struct {
     bool rebootRequired;
     bool isFirstLoad;
 
+    ClDvfsMonitorData cldvfsMonitorData;
+
     // Reserved for future use
-    u8 reserved[0x358];
+    u8 reserved[0x350];
 } HocClkContext;
 
 typedef struct

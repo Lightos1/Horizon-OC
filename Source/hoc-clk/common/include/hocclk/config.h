@@ -79,6 +79,10 @@ typedef enum {
     HocClkConfigValue_AutoRamCpuCpuOCFreq,
     HocClkConfigValue_AutoRamCpuRamOCThreshold,
 
+    HocClkConfigValue_ClDvfsMonitorCtrl,
+    HocClkConfigValue_ClDvfsParams,
+    HocClkConfigValue_ClDvfsParamsOverride,
+
     KipConfigValue_custRev,
     KipConfigValue_KipVersion,
     // KipConfigValue_mtcConf,
@@ -145,6 +149,38 @@ typedef enum {
     KipConfigValue_marikoGpuVmax,
 
     KipConfigValue_commonGpuVoltOffset,
+
+    KipConfigValue_c_volt_204000,
+    KipConfigValue_c_volt_306000,
+    KipConfigValue_c_volt_408000,
+    KipConfigValue_c_volt_510000,
+    KipConfigValue_c_volt_612000,
+    KipConfigValue_c_volt_714000,
+    KipConfigValue_c_volt_816000,
+    KipConfigValue_c_volt_918000,
+    KipConfigValue_c_volt_1020000,
+    KipConfigValue_c_volt_1122000,
+    KipConfigValue_c_volt_1224000,
+    KipConfigValue_c_volt_1326000,
+    KipConfigValue_c_volt_1428000,
+    KipConfigValue_c_volt_1581000,
+    KipConfigValue_c_volt_1683000,
+    KipConfigValue_c_volt_1785000,
+    KipConfigValue_c_volt_1887000,
+    KipConfigValue_c_volt_1963500,
+    KipConfigValue_c_volt_2091000,
+    KipConfigValue_c_volt_2193000,
+    KipConfigValue_c_volt_2295000,
+    KipConfigValue_c_volt_2397000,
+    KipConfigValue_c_volt_2499000,
+    KipConfigValue_c_volt_2601000,
+    KipConfigValue_c_volt_2703000,
+    KipConfigValue_c_volt_2805000,
+
+    KipConfigValue_tune0_low,
+    KipConfigValue_tune1_low,
+    KipConfigValue_tune0_high,
+    KipConfigValue_tune1_high,
 
     KipConfigValue_g_volt_76800,
     KipConfigValue_g_volt_153600,
@@ -338,6 +374,15 @@ static inline const char* hocclkFormatConfigValue(HocClkConfigValue val, bool pr
         case HocClkConfigValue_AutoRamCpuRamOCThreshold:
             return pretty ? "Auto High RAM CPU OC RAM Threshold" : "auto_ram_cpu_ram_oc_threshold";
 
+        case HocClkConfigValue_ClDvfsMonitorCtrl:
+            return pretty ? "ClDvfs Monitor Control" : "cldvfs_monitor_ctrl";
+
+        case HocClkConfigValue_ClDvfsParams:
+            return pretty ? "ClDvfs Params" : "cldvfs_params";
+
+        case HocClkConfigValue_ClDvfsParamsOverride:
+            return pretty ? "Override ClDvfs Params" : "cldvfs_params_override";
+
         // KIP config values
         case KipConfigValue_custRev:
             return pretty ? "Custom Revision" : "kip_cust_rev";
@@ -523,6 +568,36 @@ static inline const char* hocclkFormatConfigValue(HocClkConfigValue val, bool pr
         case KipConfigValue_g_volt_e_998400: return pretty ? "Erista GPU Volt 998 MHz" : "g_volt_e_998400";
         case KipConfigValue_g_volt_e_1036800: return pretty ? "Erista GPU Volt 1036 MHz" : "g_volt_e_1036800";
         case KipConfigValue_g_volt_e_1075200: return pretty ? "Erista GPU Volt 1075 MHz" : "g_volt_e_1075200";
+        case KipConfigValue_c_volt_204000: return pretty ? "Mariko CPU Volt 204 MHz" : "c_volt_204000";
+        case KipConfigValue_c_volt_306000: return pretty ? "Mariko CPU Volt 306 MHz" : "c_volt_306000";
+        case KipConfigValue_c_volt_408000: return pretty ? "Mariko CPU Volt 408 MHz" : "c_volt_408000";
+        case KipConfigValue_c_volt_510000: return pretty ? "Mariko CPU Volt 510 MHz" : "c_volt_510000";
+        case KipConfigValue_c_volt_612000: return pretty ? "Mariko CPU Volt 612 MHz" : "c_volt_612000";
+        case KipConfigValue_c_volt_714000: return pretty ? "Mariko CPU Volt 714 MHz" : "c_volt_714000";
+        case KipConfigValue_c_volt_816000: return pretty ? "Mariko CPU Volt 816 MHz" : "c_volt_816000";
+        case KipConfigValue_c_volt_918000: return pretty ? "Mariko CPU Volt 918 MHz" : "c_volt_918000";
+        case KipConfigValue_c_volt_1020000: return pretty ? "Mariko CPU Volt 1020 MHz" : "c_volt_1020000";
+        case KipConfigValue_c_volt_1122000: return pretty ? "Mariko CPU Volt 1122 MHz" : "c_volt_1122000";
+        case KipConfigValue_c_volt_1224000: return pretty ? "Mariko CPU Volt 1224 MHz" : "c_volt_1224000";
+        case KipConfigValue_c_volt_1326000: return pretty ? "Mariko CPU Volt 1326 MHz" : "c_volt_1326000";
+        case KipConfigValue_c_volt_1428000: return pretty ? "Mariko CPU Volt 1428 MHz" : "c_volt_1428000";
+        case KipConfigValue_c_volt_1581000: return pretty ? "Mariko CPU Volt 1581 MHz" : "c_volt_1581000";
+        case KipConfigValue_c_volt_1683000: return pretty ? "Mariko CPU Volt 1683 MHz" : "c_volt_1683000";
+        case KipConfigValue_c_volt_1785000: return pretty ? "Mariko CPU Volt 1785 MHz" : "c_volt_1785000";
+        case KipConfigValue_c_volt_1887000: return pretty ? "Mariko CPU Volt 1887 MHz" : "c_volt_1887000";
+        case KipConfigValue_c_volt_1963500: return pretty ? "Mariko CPU Volt 1963 MHz" : "c_volt_1963500";
+        case KipConfigValue_c_volt_2091000: return pretty ? "Mariko CPU Volt 2091 MHz" : "c_volt_2091000";
+        case KipConfigValue_c_volt_2193000: return pretty ? "Mariko CPU Volt 2193 MHz" : "c_volt_2193000";
+        case KipConfigValue_c_volt_2295000: return pretty ? "Mariko CPU Volt 2295 MHz" : "c_volt_2295000";
+        case KipConfigValue_c_volt_2397000: return pretty ? "Mariko CPU Volt 2397 MHz" : "c_volt_2397000";
+        case KipConfigValue_c_volt_2499000: return pretty ? "Mariko CPU Volt 2499 MHz" : "c_volt_2499000";
+        case KipConfigValue_c_volt_2601000: return pretty ? "Mariko CPU Volt 2601 MHz" : "c_volt_2601000";
+        case KipConfigValue_c_volt_2703000: return pretty ? "Mariko CPU Volt 2703 MHz" : "c_volt_2703000";
+        case KipConfigValue_c_volt_2805000: return pretty ? "Mariko CPU Volt 2805 MHz" : "c_volt_2805000";
+        case KipConfigValue_tune0_low: return pretty ? "Tune0 Low" : "tune0_low";
+        case KipConfigValue_tune1_low: return pretty ? "Tune1 Low" : "tune1_low";
+        case KipConfigValue_tune0_high: return pretty ? "Tune0 High" : "tune0_high";
+        case KipConfigValue_tune1_high: return pretty ? "Tune1 High" : "tune1_high";
         case KipConfigValue_t6_tRTW_fine_tune: return pretty ? "t6 - tRTW Fine Tune" : "t6_tRTW_fine_tune";
         case KipConfigValue_t7_tWTR_fine_tune: return pretty ? "t7 - tWTR Fine Tune" : "t7_tWTR_fine_tune";
         case KipConfigValue_PcvDebugVerbosity: return pretty ? "Pcv Debug Verbosity" : "debug_verbosity";
@@ -656,6 +731,7 @@ static inline uint64_t hocclkValidConfigValue(HocClkConfigValue val, uint64_t in
         case HocClkConfigValue_MarikoMiddleFreqs:
         case HocClkConfigValue_LiveGpuVoltage:
         case HocClkConfigValue_AutoRAMCPUOverclock:
+        case HocClkConfigValue_ClDvfsParamsOverride:
             return (input & 0x1) == input;
 
         case KipConfigValue_KipVersion:
@@ -793,6 +869,36 @@ static inline uint64_t hocclkValidConfigValue(HocClkConfigValue val, uint64_t in
         case KipConfigValue_g_soc_volt_3333000:
         case KipConfigValue_eristaCpuVmin:
         case KipConfigValue_eristaCpuUnlock:
+        case KipConfigValue_c_volt_204000:
+        case KipConfigValue_c_volt_306000:
+        case KipConfigValue_c_volt_408000:
+        case KipConfigValue_c_volt_510000:
+        case KipConfigValue_c_volt_612000:
+        case KipConfigValue_c_volt_714000:
+        case KipConfigValue_c_volt_816000:
+        case KipConfigValue_c_volt_918000:
+        case KipConfigValue_c_volt_1020000:
+        case KipConfigValue_c_volt_1122000:
+        case KipConfigValue_c_volt_1224000:
+        case KipConfigValue_c_volt_1326000:
+        case KipConfigValue_c_volt_1428000:
+        case KipConfigValue_c_volt_1581000:
+        case KipConfigValue_c_volt_1683000:
+        case KipConfigValue_c_volt_1785000:
+        case KipConfigValue_c_volt_1887000:
+        case KipConfigValue_c_volt_1963500:
+        case KipConfigValue_c_volt_2091000:
+        case KipConfigValue_c_volt_2193000:
+        case KipConfigValue_c_volt_2295000:
+        case KipConfigValue_c_volt_2397000:
+        case KipConfigValue_c_volt_2499000:
+        case KipConfigValue_c_volt_2601000:
+        case KipConfigValue_c_volt_2703000:
+        case KipConfigValue_c_volt_2805000:
+        case KipConfigValue_tune0_low:
+        case KipConfigValue_tune1_low:
+        case KipConfigValue_tune0_high:
+        case KipConfigValue_tune1_high:
         case KipConfigValue_t6_tRTW_fine_tune:
         case KipConfigValue_t7_tWTR_fine_tune:
         case KipCrc32:

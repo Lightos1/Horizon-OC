@@ -44,6 +44,8 @@ tsl::elm::ListItem* aotagTempItem = NULL;
 tsl::elm::ListItem* dramTempItem = NULL;
 tsl::elm::ListItem* cTypeItem = NULL;
 tsl::elm::ListItem* creditsItem = NULL;
+tsl::elm::ListItem* cldvfsMonitorNewItem = NULL;
+tsl::elm::ListItem* cldvfsMonitorValueItem = NULL;
 
 #define R_ARROW "\u2192"
 
@@ -120,6 +122,18 @@ void AboutGui::listUI()
         new tsl::elm::ListItem("RAM BW (GPU):");
     this->listElement->addItem(ramBWItemGpu);
 
+
+    this->listElement->addItem(
+        new tsl::elm::CategoryHeader("CLDVFS Monitor")
+    );
+
+    cldvfsMonitorNewItem =
+        new tsl::elm::ListItem("Data New:");
+    this->listElement->addItem(cldvfsMonitorNewItem);
+
+    cldvfsMonitorValueItem =
+        new tsl::elm::ListItem("Data Value:");
+    this->listElement->addItem(cldvfsMonitorValueItem);
 
     this->listElement->addItem(
         new tsl::elm::CategoryHeader("Hardware Info")
@@ -280,6 +294,11 @@ void AboutGui::refresh()
     millis = context->temps[HocClkThermalSensor_DRAM];
     sprintf(strings[12], "%u.%u °C", millis / 1000U, (millis % 1000U) / 100U);
     dramTempItem->setValue(strings[12]);
+
+    cldvfsMonitorNewItem->setValue(context->cldvfsMonitorData.dfllMonitorDataNew ? "Yes" : "No");
+
+    sprintf(strings[13], "%u (0x%X)", context->cldvfsMonitorData.dfllMonitorDataValue, context->cldvfsMonitorData.dfllMonitorDataValue);
+    cldvfsMonitorValueItem->setValue(strings[13]);
 
     cTypeItem->setValue(hocClkFormatConsoleType(this->context->consoleType, true));
 }

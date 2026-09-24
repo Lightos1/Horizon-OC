@@ -123,6 +123,12 @@ volatile CustomizeTable C = {
 
 .commonGpuVoltOffset = 0,
 
+/* This is just for researching tables more quickly and won't let you use custom cpu voltages. */
+/* The cpu voltage is decided by the hardware. */
+.marikoCpuVoltArray = {
+
+},
+
 /* Setting DEACTIVATED_GPU_FREQ on any freq will disable it and all freqs greater than it. (the latter is a bug :/) */
 /* AUTO: Voltage is optimally chosen; with commonGpuVoltOffset applied. */
 /* AUTO only works up to 1305 GPU on Mariko and 998 GPU on Erista (it is reccomended to manually set your 998MHz voltage though) */
@@ -216,6 +222,11 @@ volatile CustomizeTable C = {
     0 /* >= 3266 */,
     0 /* >= 3333 */,
 },
+
+.tune0_low = 0,
+.tune1_low = 0,
+.tune0_high = 0,
+.tune1_high = 0,
 
 /* Advanced. */
 .fineTune_t6_tRTW = 0,

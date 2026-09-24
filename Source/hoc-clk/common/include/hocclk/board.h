@@ -50,7 +50,7 @@ typedef enum
 } HocClkConsoleType;
 
 typedef enum {
-    HocClkVoltage_SOC = 0, // VDD_SOC rail. 
+    HocClkVoltage_SOC = 0, // VDD_SOC rail.
     HocClkVoltage_EMCVDD2, // DRAM VDD2 rail
     HocClkVoltage_CPU,     // CPU rail
     HocClkVoltage_GPU,     // GPU rail
@@ -72,7 +72,7 @@ typedef enum
 
 typedef enum
 {
-    HocClkModule_CPU = 0, 
+    HocClkModule_CPU = 0,
     HocClkModule_GPU,
     HocClkModule_MEM,
     HocClkModule_Governor,
@@ -201,6 +201,23 @@ typedef enum AulaColorMode {
     AulaDisplayColorMode_Night3 = 0x75,
 } AulaColorMode;
 
+#define CLDVFS_PARAMS_RESET_VALUE 0xF0
+
+typedef enum {
+    Ctrl_Disable     = 0xFF, /* Actually zero but this is required to not mess up config. */
+    Ctrl_CycleInt    = 1,
+    Ctrl_ProTerm     = 2,
+    Ctrl_IntTerm     = 3,
+    Ctrl_OutputInt   = 4,
+    Ctrl_OutputValue = 5,
+    Ctrl_Freq        = 6,
+} DlDvfsMonitorCtrl;
+
+typedef struct {
+    bool dfllMonitorDataNew;
+    u16 dfllMonitorDataValue;
+} ClDvfsMonitorData;
+
 // typedef enum {
 // 	PANEL_JDI_XXX062M     = 0x10,
 // 	PANEL_JDI_LAM062M109A = 0x0910, // SI.
@@ -211,7 +228,7 @@ typedef enum AulaColorMode {
 // 	PANEL_AUO_A055TAN01   = 0x1030,
 // 	PANEL_SHP_LQ055T1SW10 = 0x1040,
 // 	PANEL_SAM_AMS699VC01  = 0x2050,
-    
+
 // 	PANEL_RR_SUPER5_OLED_V1  = 0x10E0,
 // 	PANEL_RR_SUPER5_OLED_HD_V1  = 0x10E1,
 // 	PANEL_RR_SUPER7_IPS_V1  = 0x0FE0,

@@ -35,11 +35,12 @@ struct ValueRange {
     std::string suffix;
     std::uint32_t divisor;
     int decimalPlaces;
-    ValueRange() : min(0), max(0), step(1), suffix(""), divisor(1), decimalPlaces(0) {
+    bool hex;
+    ValueRange() : min(0), max(0), step(1), suffix(""), divisor(1), decimalPlaces(0), hex(false) {
     }
     ValueRange(std::uint32_t min, std::uint32_t max, std::uint32_t step, const std::string &suffix = "", std::uint32_t divisor = 1,
-               int decimalPlaces = 0)
-        : min(min), max(max), step(step), suffix(suffix), divisor(divisor), decimalPlaces(decimalPlaces) {
+               int decimalPlaces = 0, bool hex = false)
+        : min(min), max(max), step(step), suffix(suffix), divisor(divisor), decimalPlaces(decimalPlaces), hex(hex) {
     }
 };
 

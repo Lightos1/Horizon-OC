@@ -41,6 +41,10 @@ std::string ValueChoiceGui::formatValue(std::uint32_t value) {
             return this->showDNO ? FREQ_DEFAULT_TEXT : VALUE_DEFAULT_TEXT;
         }
     }
+    if (range.hex) {
+        oss << "0x" << std::uppercase << std::hex << value;
+        return oss.str();
+    }
     double displayValue = static_cast<double>(value) / static_cast<double>(range.divisor);
     oss << std::fixed << std::setprecision(range.decimalPlaces) << displayValue;
     if (!range.suffix.empty()) {

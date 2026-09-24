@@ -66,6 +66,9 @@ class SocCustomTableSubmenuGui;
 class CpuSubmenuGui;
 class GpuSubmenuGui;
 class GpuCustomTableSubmenuGui;
+class CpuCustomTableSubmenuGui;
+class CpuTuneSubmenuGui;
+class CpuTuneBitfieldSubmenuGui;
 class ExperimentalSettingsSubMenuGui;
 #ifdef OVERLAY_DEBUG
 class DebugSettingsSubMenuGui;
@@ -240,7 +243,9 @@ void MiscGui::addConfigButton(HocClkConfigValue configVal, const char *altName, 
             }
         }
 
-        if (!foundNamedValue) {
+        if (!foundNamedValue && range.hex) {
+            snprintf(valueText, sizeof(valueText), "0x%lX", (unsigned long)currentValue);
+        } else if (!foundNamedValue) {
             uint64_t displayValue = currentValue / range.divisor;
             if (!range.suffix.empty()) {
                 snprintf(valueText, sizeof(valueText), "%lu %s", displayValue, range.suffix.c_str());
@@ -339,7 +344,9 @@ void MiscGui::addConfigButtonS(HocClkConfigValue configVal, const char *altName,
             }
         }
 
-        if (!foundNamedValue) {
+        if (!foundNamedValue && range.hex) {
+            snprintf(valueText, sizeof(valueText), "0x%lX", (unsigned long)currentValue);
+        } else if (!foundNamedValue) {
             uint64_t displayValue = currentValue / range.divisor;
             if (!range.suffix.empty()) {
                 snprintf(valueText, sizeof(valueText), "%lu %s", displayValue, range.suffix.c_str());
@@ -509,7 +516,9 @@ void MiscGui::addGpuFreqVoltageButton(HocClkConfigValue configVal, const char *a
                 break;
             }
         }
-        if (!foundNamedValue) {
+        if (!foundNamedValue && range.hex) {
+            snprintf(valueText, sizeof(valueText), "0x%lX", (unsigned long)currentValue);
+        } else if (!foundNamedValue) {
             uint64_t displayValue = currentValue / range.divisor;
             if (!range.suffix.empty()) {
                 snprintf(valueText, sizeof(valueText), "%lu %s", displayValue, range.suffix.c_str());
@@ -2476,6 +2485,49 @@ class CpuSubmenuGui : public MiscGui {
                             this->configList->values[KipConfigValue_marikoCpuUVHigh] ? &mCpuClockThresholdsUV : &mCpuClockThresholds, {}, maxClkOptions,
                             false, true);
 
+        std::vector<NamedValue> cldvfsMonitorCtrlOptions = {
+            NamedValue("Disabled", Ctrl_Disable), NamedValue("Cycle Int", Ctrl_CycleInt), NamedValue("Pro Term", Ctrl_ProTerm),
+            NamedValue("Int Term", Ctrl_IntTerm), NamedValue("Output Int", Ctrl_OutputInt), NamedValue("Output Value", Ctrl_OutputValue),
+            NamedValue("Freq", Ctrl_Freq),
+        };
+
+        addConfigButton(HocClkConfigValue_ClDvfsMonitorCtrl, "CLDVFS Monitor Ctrl", ValueRange(0, 0, 1, "", 1), "CLDVFS Monitor Ctrl",
+                        &thresholdsDisabled, {}, cldvfsMonitorCtrlOptions, true, false);
+
+        tsl::elm::ListItem *cldvfsParams = new tsl::elm::ListItem("CLDVFS Params");
+        cldvfsParams->setClickListener([](u64 keys) {
+            if (keys & HidNpadButton_A) {
+                tsl::swapTo<CpuTuneBitfieldSubmenuGui>(HocClkConfigValue_ClDvfsParams);
+                return true;
+            }
+            return false;
+        });
+        cldvfsParams->setTextColor(tsl::Color(120, 235, 255, 255));
+        cldvfsParams->setValue(R_ARROW);
+        this->listElement->addItem(cldvfsParams);
+
+        tsl::elm::ListItem *cpuVoltageTable = new tsl::elm::ListItem("CPU Voltage Table");
+        cpuVoltageTable->setClickListener([](u64 keys) {
+            if (keys & HidNpadButton_A) {
+                tsl::swapTo<CpuCustomTableSubmenuGui>();
+                return true;
+            }
+            return false;
+        });
+        cpuVoltageTable->setValue(R_ARROW);
+        this->listElement->addItem(cpuVoltageTable);
+
+        tsl::elm::ListItem *cpuTuneRegisters = new tsl::elm::ListItem("CPU Tune Registers");
+        cpuTuneRegisters->setClickListener([](u64 keys) {
+            if (keys & HidNpadButton_A) {
+                tsl::swapTo<CpuTuneSubmenuGui>();
+                return true;
+            }
+            return false;
+        });
+        cpuTuneRegisters->setValue(R_ARROW);
+        this->listElement->addItem(cpuTuneRegisters);
+
         } else {
             addConfigTrackbar(KipConfigValue_eristaCpuUV, "CPU UV", ValueRange(0, 5, 1));
 
@@ -2505,6 +2557,11 @@ class CpuSubmenuGui : public MiscGui {
             addConfigToggle(HocClkConfigValue_LiveCpuUv, nullptr);
         }
         addConfigToggle(HocClkConfigValue_OverwriteBoostMode, nullptr);
+
+        if (!lastItemName.empty()) {
+            this->listElement->jumpToItem(lastItemName);
+        }
+        lastItemName = "";
     }
 };
 
@@ -2994,6 +3051,287 @@ class SocCustomTableSubmenuGui : public MiscGui {
         addConfigButton(KipConfigValue_g_soc_volt_3200000, "3200MHz", ValueRange(0, 0, 0, "0", 1), "Voltage", &voltageThresholds, {}, socVolts, false, true);
         addConfigButton(KipConfigValue_g_soc_volt_3266000, "3266MHz", ValueRange(0, 0, 0, "0", 1), "Voltage", &voltageThresholds, {}, socVolts, false, true);
         addConfigButton(KipConfigValue_g_soc_volt_3333000, "3333MHz", ValueRange(0, 0, 0, "0", 1), "Voltage", &voltageThresholds, {}, socVolts, false, true);
+    }
+};
+
+class CpuCustomTableSubmenuGui : public MiscGui {
+    public:
+    CpuCustomTableSubmenuGui() {}
+
+    bool handleInput(u64 keysDown, u64 keysHeld, const HidTouchState &touchPos, HidAnalogStickState leftJoyStick,
+                      HidAnalogStickState rightJoyStick) override {
+        if (keysDown & KEY_B) {
+            triggerExitFeedback();
+            lastItemName = "CPU Voltage Table";
+            tsl::swapTo<CpuSubmenuGui>();
+            return true;
+        }
+        return false;
+    }
+
+    protected:
+    void listUI() override {
+        Result rc = hocclkIpcGetConfigValues(this->configList);
+        if (R_FAILED(rc)) [[unlikely]] {
+            FatalGui::openWithResultCode("hocclkIpcGetConfigValues", rc);
+            return;
+        }
+
+        this->listElement->addItem(new CompactCategoryHeader("CPU Custom Voltages"));
+
+        ValueThresholds voltageThresholds(1160, 1180);
+
+        std::vector<NamedValue> cpuVolts = { NamedValue("No Override", 0) };
+        for (u32 mv = 550; mv <= 1235; mv += 5) {
+            cpuVolts.emplace_back(std::to_string(mv) + "mV", mv);
+        }
+
+        addConfigButton(KipConfigValue_c_volt_204000, "204MHz", ValueRange(0, 0, 0, "0", 1), "Voltage", &voltageThresholds, {}, cpuVolts, false, true);
+        addConfigButton(KipConfigValue_c_volt_306000, "306MHz", ValueRange(0, 0, 0, "0", 1), "Voltage", &voltageThresholds, {}, cpuVolts, false, true);
+        addConfigButton(KipConfigValue_c_volt_408000, "408MHz", ValueRange(0, 0, 0, "0", 1), "Voltage", &voltageThresholds, {}, cpuVolts, false, true);
+        addConfigButton(KipConfigValue_c_volt_510000, "510MHz", ValueRange(0, 0, 0, "0", 1), "Voltage", &voltageThresholds, {}, cpuVolts, false, true);
+        addConfigButton(KipConfigValue_c_volt_612000, "612MHz", ValueRange(0, 0, 0, "0", 1), "Voltage", &voltageThresholds, {}, cpuVolts, false, true);
+        addConfigButton(KipConfigValue_c_volt_714000, "714MHz", ValueRange(0, 0, 0, "0", 1), "Voltage", &voltageThresholds, {}, cpuVolts, false, true);
+        addConfigButton(KipConfigValue_c_volt_816000, "816MHz", ValueRange(0, 0, 0, "0", 1), "Voltage", &voltageThresholds, {}, cpuVolts, false, true);
+        addConfigButton(KipConfigValue_c_volt_918000, "918MHz", ValueRange(0, 0, 0, "0", 1), "Voltage", &voltageThresholds, {}, cpuVolts, false, true);
+        addConfigButton(KipConfigValue_c_volt_1020000, "1020MHz", ValueRange(0, 0, 0, "0", 1), "Voltage", &voltageThresholds, {}, cpuVolts, false, true);
+        addConfigButton(KipConfigValue_c_volt_1122000, "1122MHz", ValueRange(0, 0, 0, "0", 1), "Voltage", &voltageThresholds, {}, cpuVolts, false, true);
+        addConfigButton(KipConfigValue_c_volt_1224000, "1224MHz", ValueRange(0, 0, 0, "0", 1), "Voltage", &voltageThresholds, {}, cpuVolts, false, true);
+        addConfigButton(KipConfigValue_c_volt_1326000, "1326MHz", ValueRange(0, 0, 0, "0", 1), "Voltage", &voltageThresholds, {}, cpuVolts, false, true);
+        addConfigButton(KipConfigValue_c_volt_1428000, "1428MHz", ValueRange(0, 0, 0, "0", 1), "Voltage", &voltageThresholds, {}, cpuVolts, false, true);
+        addConfigButton(KipConfigValue_c_volt_1581000, "1581MHz", ValueRange(0, 0, 0, "0", 1), "Voltage", &voltageThresholds, {}, cpuVolts, false, true);
+        addConfigButton(KipConfigValue_c_volt_1683000, "1683MHz", ValueRange(0, 0, 0, "0", 1), "Voltage", &voltageThresholds, {}, cpuVolts, false, true);
+        addConfigButton(KipConfigValue_c_volt_1785000, "1785MHz", ValueRange(0, 0, 0, "0", 1), "Voltage", &voltageThresholds, {}, cpuVolts, false, true);
+        addConfigButton(KipConfigValue_c_volt_1887000, "1887MHz", ValueRange(0, 0, 0, "0", 1), "Voltage", &voltageThresholds, {}, cpuVolts, false, true);
+        addConfigButton(KipConfigValue_c_volt_1963500, "1963MHz", ValueRange(0, 0, 0, "0", 1), "Voltage", &voltageThresholds, {}, cpuVolts, false, true);
+        addConfigButton(KipConfigValue_c_volt_2091000, "2091MHz", ValueRange(0, 0, 0, "0", 1), "Voltage", &voltageThresholds, {}, cpuVolts, false, true);
+        addConfigButton(KipConfigValue_c_volt_2193000, "2193MHz", ValueRange(0, 0, 0, "0", 1), "Voltage", &voltageThresholds, {}, cpuVolts, false, true);
+        addConfigButton(KipConfigValue_c_volt_2295000, "2295MHz", ValueRange(0, 0, 0, "0", 1), "Voltage", &voltageThresholds, {}, cpuVolts, false, true);
+        addConfigButton(KipConfigValue_c_volt_2397000, "2397MHz", ValueRange(0, 0, 0, "0", 1), "Voltage", &voltageThresholds, {}, cpuVolts, false, true);
+        addConfigButton(KipConfigValue_c_volt_2499000, "2499MHz", ValueRange(0, 0, 0, "0", 1), "Voltage", &voltageThresholds, {}, cpuVolts, false, true);
+        addConfigButton(KipConfigValue_c_volt_2601000, "2601MHz", ValueRange(0, 0, 0, "0", 1), "Voltage", &voltageThresholds, {}, cpuVolts, false, true);
+        addConfigButton(KipConfigValue_c_volt_2703000, "2703MHz", ValueRange(0, 0, 0, "0", 1), "Voltage", &voltageThresholds, {}, cpuVolts, false, true);
+        addConfigButton(KipConfigValue_c_volt_2805000, "2805MHz", ValueRange(0, 0, 0, "0", 1), "Voltage", &voltageThresholds, {}, cpuVolts, false, true);
+    }
+};
+
+struct TuneBitfield {
+    const char *name;
+    u32 shift;
+    u32 mask;
+    const char *const *names;
+};
+
+static const char *const cldvfsCgScaleNames[]   = { "Normal", "Gain / 8" };
+static const char *const cldvfsForceModeNames[] = { "Disable", "Fixed", "Auto", "Reserved" };
+static const char *const cldvfsCiParamNames[]   = { "Disable", "Div2", "Div4", "Div8", "Div16", "Div32", "Div64", "Div128" };
+
+static const TuneBitfield cldvfsParamsBitfields[] = {
+    { "CG_SCALE", 24, 0x1, cldvfsCgScaleNames },
+    { "FORCE_MODE", 22, 0x3, cldvfsForceModeNames },
+    { "CF_PARAM", 16, 0x3F, nullptr },
+    { "CI_PARAM", 8, 0x7, cldvfsCiParamNames },
+    { "CG_PARAM", 0, 0xFF, nullptr },
+};
+
+static const TuneBitfield tune0Bitfields[] = {
+    { "DLY_STK", 8, 0xFF, nullptr },
+    { "DLY_INV", 0, 0xFF, nullptr },
+};
+
+static const TuneBitfield tune1Bitfields[] = {
+    { "DLY_FINE", 24, 0xFF, nullptr },
+    { "DLY_FINE_HL", 23, 0x1, nullptr },
+    { "DLY_SRAM", 12, 0x7FF, nullptr },
+    { "DLY_SPARE1", 11, 0x1, nullptr },
+    { "DLY_WIRE", 0, 0x7FF, nullptr },
+};
+
+static bool isTune0Register(HocClkConfigValue reg) {
+    return reg == KipConfigValue_tune0_low || reg == KipConfigValue_tune0_high;
+}
+
+static std::string formatHex(u64 value) {
+    char text[16];
+    snprintf(text, sizeof(text), "0x%lX", (unsigned long)value);
+    return text;
+}
+
+static std::string formatBitfield(const TuneBitfield &field, u32 value) {
+    if (field.names) {
+        return std::string(field.names[value]) + " (" + formatHex(value) + ")";
+    }
+    return formatHex(value);
+}
+
+class CpuTuneBitfieldSubmenuGui : public MiscGui {
+    public:
+    CpuTuneBitfieldSubmenuGui(HocClkConfigValue reg) : reg(reg) {}
+
+    bool handleInput(u64 keysDown, u64 keysHeld, const HidTouchState &touchPos, HidAnalogStickState leftJoyStick,
+                      HidAnalogStickState rightJoyStick) override {
+        if (keysDown & KEY_B) {
+            triggerExitFeedback();
+            if (reg == HocClkConfigValue_ClDvfsParams) {
+                lastItemName = "CLDVFS Params";
+                tsl::swapTo<CpuSubmenuGui>();
+            } else {
+                lastItemName = hocclkFormatConfigValue(reg, true);
+                tsl::swapTo<CpuTuneSubmenuGui>();
+            }
+            return true;
+        }
+        return false;
+    }
+
+    protected:
+    HocClkConfigValue reg;
+    tsl::elm::ListItem *totalItem = nullptr;
+
+    u32 regValue() const {
+        u32 value = (u32)this->configList->values[reg];
+        if (reg == HocClkConfigValue_ClDvfsParams && value == 0) {
+            return CLDVFS_PARAMS_RESET_VALUE;
+        }
+        return value;
+    }
+
+    bool isKipRegister() const {
+        return reg != HocClkConfigValue_ClDvfsParams;
+    }
+
+    void addBitfield(const TuneBitfield &field) {
+        u32 current = (regValue() >> field.shift) & field.mask;
+
+        tsl::elm::ListItem *item = new tsl::elm::ListItem(field.name);
+        if (!isKipRegister()) {
+            item->setTextColor(tsl::Color(120, 235, 255, 255));
+        }
+        item->setValue(formatBitfield(field, current));
+
+        ValueRange range(0, field.mask, 1, "", 1, 0, true);
+
+        std::vector<NamedValue> fieldNames;
+        if (field.names) {
+            for (u32 i = 0; i <= field.mask; i++) {
+                fieldNames.emplace_back(std::string(field.names[i]) + " (" + formatHex(i) + ")", i);
+            }
+        }
+        std::string category = std::string(hocclkFormatConfigValue(reg, true)) + " " + field.name;
+
+        item->setClickListener([this, item, field, range, category, fieldNames](u64 keys) {
+            if ((keys & HidNpadButton_A) == 0) {
+                return false;
+            }
+
+            u32 selected = (regValue() >> field.shift) & field.mask;
+
+            tsl::changeTo<ValueChoiceGui>(
+                selected, range, category,
+                [this, item, field](std::uint32_t value) {
+                    u32 reg32 = regValue();
+                    reg32 = (reg32 & ~(field.mask << field.shift)) | ((value & field.mask) << field.shift);
+                    this->configList->values[reg] = reg32;
+                    Result rc = hocclkIpcSetConfigValues(this->configList);
+                    if (R_FAILED(rc)) {
+                        FatalGui::openWithResultCode("hocclkIpcSetConfigValues", rc);
+                        return false;
+                    }
+                    if (isKipRegister()) {
+                        this->shouldSaveKip = true;
+                    }
+                    item->setValue(formatBitfield(field, value));
+                    this->totalItem->setValue(formatHex(reg32));
+                    this->lastContextUpdate = armGetSystemTick();
+                    return true;
+                },
+                ValueThresholds(), false, std::map<std::uint32_t, std::string>{}, fieldNames, false);
+            return true;
+        });
+
+        this->listElement->addItem(item);
+    }
+
+    void listUI() override {
+        Result rc = hocclkIpcGetConfigValues(this->configList);
+        if (R_FAILED(rc)) [[unlikely]] {
+            FatalGui::openWithResultCode("hocclkIpcGetConfigValues", rc);
+            return;
+        }
+
+        this->listElement->addItem(new CompactCategoryHeader(hocclkFormatConfigValue(reg, true)));
+
+        if (reg == HocClkConfigValue_ClDvfsParams) {
+            addConfigToggle(HocClkConfigValue_ClDvfsParamsOverride, "Override Params", false);
+        }
+
+        totalItem = new tsl::elm::ListItem("Register Value");
+        totalItem->setValue(formatHex(regValue()));
+        this->listElement->addItem(totalItem);
+
+        if (reg == HocClkConfigValue_ClDvfsParams) {
+            for (const auto &field : cldvfsParamsBitfields) {
+                addBitfield(field);
+            }
+        } else if (isTune0Register(reg)) {
+            for (const auto &field : tune0Bitfields) {
+                addBitfield(field);
+            }
+        } else {
+            for (const auto &field : tune1Bitfields) {
+                addBitfield(field);
+            }
+        }
+    }
+};
+
+class CpuTuneSubmenuGui : public MiscGui {
+    public:
+    CpuTuneSubmenuGui() {}
+
+    bool handleInput(u64 keysDown, u64 keysHeld, const HidTouchState &touchPos, HidAnalogStickState leftJoyStick,
+                      HidAnalogStickState rightJoyStick) override {
+        if (keysDown & KEY_B) {
+            triggerExitFeedback();
+            lastItemName = "CPU Tune Registers";
+            tsl::swapTo<CpuSubmenuGui>();
+            return true;
+        }
+        return false;
+    }
+
+    protected:
+    void addRegister(HocClkConfigValue reg) {
+        tsl::elm::ListItem *item = new tsl::elm::ListItem(hocclkFormatConfigValue(reg, true));
+        item->setValue(formatHex(this->configList->values[reg]));
+        item->setClickListener([reg](u64 keys) {
+            if (keys & HidNpadButton_A) {
+                tsl::swapTo<CpuTuneBitfieldSubmenuGui>(reg);
+                return true;
+            }
+            return false;
+        });
+        this->listElement->addItem(item);
+    }
+
+    void listUI() override {
+        Result rc = hocclkIpcGetConfigValues(this->configList);
+        if (R_FAILED(rc)) [[unlikely]] {
+            FatalGui::openWithResultCode("hocclkIpcGetConfigValues", rc);
+            return;
+        }
+
+        this->listElement->addItem(new CompactCategoryHeader("CPU Tune Registers"));
+
+        addRegister(KipConfigValue_tune0_low);
+        addRegister(KipConfigValue_tune1_low);
+        addRegister(KipConfigValue_tune0_high);
+        addRegister(KipConfigValue_tune1_high);
+
+        if (!lastItemName.empty()) {
+            this->listElement->jumpToItem(lastItemName);
+        }
+        lastItemName = "";
     }
 };
 

@@ -232,6 +232,22 @@ namespace ams::ldr::hoc::pcv::mariko {
                 break;
         }
 
+        if (C.tune0_low) {
+            PATCH_OFFSET(&(entry->tune0_low), C.tune0_low);
+        }
+
+        if (C.tune1_low) {
+            PATCH_OFFSET(&(entry->tune1_low), C.tune1_low);
+        }
+
+        if (C.tune0_high) {
+            PATCH_OFFSET(&(entry->tune0_high), C.tune0_high);
+        }
+
+        if (C.tune1_high) {
+            PATCH_OFFSET(&(entry->tune1_high), C.tune1_high);
+        }
+
         R_SUCCEED();
     }
 

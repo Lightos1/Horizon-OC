@@ -19,7 +19,6 @@
 #include <hocclk.h>
 #include <switch.h>
 
-
 namespace board {
 
     constexpr u32 GpuVoltTableTempCount = 6;
@@ -59,5 +58,9 @@ namespace board {
     void PcvHijackGpuVolts(u32 vmin);
     void PcvHijackGpuFrequency(u32 voltage, u32 hz);
     u32 GetMinimumGpuVmin(u32 freqMhz, u32 bracket);
+    void GetClDvfsMonitorData(ClDvfsMonitorData &outData);
+    void WriteCldvfsMonitorCtrl(DlDvfsMonitorCtrl ctrl);
+    u32 ReadCldvfsParams();
+    void WriteCldvfsParams(u32 params);
 
 }  // namespace board
