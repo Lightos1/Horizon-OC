@@ -69,6 +69,7 @@ class GpuCustomTableSubmenuGui;
 class CpuCustomTableSubmenuGui;
 class CpuTuneSubmenuGui;
 class CpuTuneBitfieldSubmenuGui;
+class CpuCldvfsSubmenuGui;
 class ExperimentalSettingsSubMenuGui;
 #ifdef OVERLAY_DEBUG
 class DebugSettingsSubMenuGui;
@@ -2485,26 +2486,16 @@ class CpuSubmenuGui : public MiscGui {
                             this->configList->values[KipConfigValue_marikoCpuUVHigh] ? &mCpuClockThresholdsUV : &mCpuClockThresholds, {}, maxClkOptions,
                             false, true);
 
-        std::vector<NamedValue> cldvfsMonitorCtrlOptions = {
-            NamedValue("Disabled", Ctrl_Disable), NamedValue("Cycle Int", Ctrl_CycleInt), NamedValue("Pro Term", Ctrl_ProTerm),
-            NamedValue("Int Term", Ctrl_IntTerm), NamedValue("Output Int", Ctrl_OutputInt), NamedValue("Output Value", Ctrl_OutputValue),
-            NamedValue("Freq", Ctrl_Freq),
-        };
-
-        addConfigButton(HocClkConfigValue_ClDvfsMonitorCtrl, "CLDVFS Monitor Ctrl", ValueRange(0, 0, 1, "", 1), "CLDVFS Monitor Ctrl",
-                        &thresholdsDisabled, {}, cldvfsMonitorCtrlOptions, true, false);
-
-        tsl::elm::ListItem *cldvfsParams = new tsl::elm::ListItem("CLDVFS Params");
-        cldvfsParams->setClickListener([](u64 keys) {
+        tsl::elm::ListItem *cldvfsRegisters = new tsl::elm::ListItem("CLDVFS Registers");
+        cldvfsRegisters->setClickListener([](u64 keys) {
             if (keys & HidNpadButton_A) {
-                tsl::swapTo<CpuTuneBitfieldSubmenuGui>(HocClkConfigValue_ClDvfsParams);
+                tsl::swapTo<CpuCldvfsSubmenuGui>();
                 return true;
             }
             return false;
         });
-        cldvfsParams->setTextColor(tsl::Color(120, 235, 255, 255));
-        cldvfsParams->setValue(R_ARROW);
-        this->listElement->addItem(cldvfsParams);
+        cldvfsRegisters->setValue(R_ARROW);
+        this->listElement->addItem(cldvfsRegisters);
 
         tsl::elm::ListItem *cpuVoltageTable = new tsl::elm::ListItem("CPU Voltage Table");
         cpuVoltageTable->setClickListener([](u64 keys) {
@@ -3174,7 +3165,7 @@ class CpuTuneBitfieldSubmenuGui : public MiscGui {
             triggerExitFeedback();
             if (reg == HocClkConfigValue_ClDvfsParams) {
                 lastItemName = "CLDVFS Params";
-                tsl::swapTo<CpuSubmenuGui>();
+                tsl::swapTo<CpuCldvfsSubmenuGui>();
             } else {
                 lastItemName = hocclkFormatConfigValue(reg, true);
                 tsl::swapTo<CpuTuneSubmenuGui>();
@@ -3327,6 +3318,91 @@ class CpuTuneSubmenuGui : public MiscGui {
         addRegister(KipConfigValue_tune1_low);
         addRegister(KipConfigValue_tune0_high);
         addRegister(KipConfigValue_tune1_high);
+
+        if (!lastItemName.empty()) {
+            this->listElement->jumpToItem(lastItemName);
+        }
+        lastItemName = "";
+    }
+};
+
+class CpuCldvfsSubmenuGui : public MiscGui {
+    public:
+    CpuCldvfsSubmenuGui() {}
+
+    bool handleInput(u64 keysDown, u64 keysHeld, const HidTouchState &touchPos, HidAnalogStickState leftJoyStick,
+                      HidAnalogStickState rightJoyStick) override {
+        if (keysDown & KEY_B) {
+            triggerExitFeedback();
+            lastItemName = "CLDVFS Registers";
+            tsl::swapTo<CpuSubmenuGui>();
+            return true;
+        }
+        return false;
+    }
+
+    void refresh() override {
+        MiscGui::refresh();
+
+        if (!this->context || !monitorNewItem || !monitorValueItem) {
+            return;
+        }
+
+        monitorNewItem->setValue(this->context->cldvfsMonitorData.dfllMonitorDataNew ? "Yes" : "No");
+
+        u32 value = this->context->cldvfsMonitorData.dfllMonitorDataValue;
+        char text[32];
+        snprintf(text, sizeof(text), "%u (0x%X)", value, value);
+        monitorValueItem->setValue(text);
+    }
+
+    protected:
+    tsl::elm::ListItem *monitorNewItem = nullptr;
+    tsl::elm::ListItem *monitorValueItem = nullptr;
+
+    void listUI() override {
+        Result rc = hocclkIpcGetConfigValues(this->configList);
+        if (R_FAILED(rc)) [[unlikely]] {
+            FatalGui::openWithResultCode("hocclkIpcGetConfigValues", rc);
+            return;
+        }
+
+        ValueThresholds thresholdsDisabled(0, 0);
+
+        this->listElement->addItem(new CompactCategoryHeader("Monitor"));
+
+        std::vector<NamedValue> monitorCtrlOptions = {
+            NamedValue("Disabled", Ctrl_Disable), NamedValue("Cycle Int", Ctrl_CycleInt), NamedValue("Pro Term", Ctrl_ProTerm),
+            NamedValue("Int Term", Ctrl_IntTerm), NamedValue("Output Int", Ctrl_OutputInt), NamedValue("Output Value", Ctrl_OutputValue),
+            NamedValue("Freq", Ctrl_Freq),
+        };
+
+        addConfigButton(HocClkConfigValue_ClDvfsMonitorCtrl, "Monitor Ctrl", ValueRange(0, 0, 1, "", 1), "CLDVFS Monitor Ctrl",
+                        &thresholdsDisabled, {}, monitorCtrlOptions, true, false);
+
+        monitorNewItem = new tsl::elm::ListItem("Data New");
+        this->listElement->addItem(monitorNewItem);
+
+        monitorValueItem = new tsl::elm::ListItem("Data Value");
+        this->listElement->addItem(monitorValueItem);
+
+        tsl::elm::CustomDrawer *paramsSpacer = new tsl::elm::CustomDrawer([](tsl::gfx::Renderer *, s32, s32, s32, s32) {});
+        paramsSpacer->setBoundaries(0, 0, tsl::cfg::FramebufferWidth, 20);
+        this->listElement->addItem(paramsSpacer);
+
+        this->listElement->addItem(new CompactCategoryHeader("Params"));
+
+        tsl::elm::ListItem *params = new tsl::elm::ListItem("CLDVFS Params");
+        params->setClickListener([](u64 keys) {
+            if (keys & HidNpadButton_A) {
+                tsl::swapTo<CpuTuneBitfieldSubmenuGui>(HocClkConfigValue_ClDvfsParams);
+                return true;
+            }
+            return false;
+        });
+        params->setTextColor(tsl::Color(120, 235, 255, 255));
+        params->setValue(R_ARROW);
+        this->listElement->addItem(params);
 
         if (!lastItemName.empty()) {
             this->listElement->jumpToItem(lastItemName);
